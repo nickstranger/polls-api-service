@@ -1,0 +1,33 @@
+image: node:14.5.0-alpine3.12
+
+cache:
+  paths:
+    - node_modules/
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  before_script:
+    - npm install
+  script:
+    - npm run build
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - dist/
+  only:
+    - master
+    - /^version/.*$/
+
+unit_tests:
+  stage: test
+  variables:
+    NODE_ENV: test
+  script:
+    - npm run test
+  only:
+    - master
+    - /^version/.*$/
