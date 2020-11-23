@@ -2,99 +2,63 @@
 
 ## Описание
 
-Проект сервиса голосования.
-
-Проект основан на фреймворке Nestjs
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Зависимости
-
-Перечень зависимостей приложения
-
-## Структура приложения
-
-Описание папок и файлов приложения
+Микросервис голосования. Создает, редактирует, отдает опросы.
 
 ## Установка
 
-### Конфигурация докер контейнера
+#### Конфигурация докер контейнера
 
-1. Для управления режимом докер контейнера необходимо установить переменную NODE_ENV
-   в переменных средах
-   По умолчанию, режим development
-
-Для режима разработки:
+Создать в корне проекта файл .env с содержимым:
 
 ```
-export NODE_ENV=development
-```
+SERVER_HOST=localhost
+SERVER_PORT=4000
+NODE_ENV=dev
 
-Для режима рабочей версии:
-
-```
-export NODE_ENV=production
-```
-
-2. Создать файл .env с содержимым:
-
-```
-.env
-```
-
-Заполните поля (пример):
-
-```
-SERVER_PORT=3000
-SERVER_HOSTNAME=localhost
-DB_HOSTNAME=postgres
+DB_HOST=postgres
 DB_PORT=5432
 DB_USERNAME=user
 DB_PASSWORD=pass
-DB_DATABASE_NAME=polls
-MODE=dev
+DB_DATABASE=polls
 TYPEORM_SYNC=true
-REDIS_HOSTNAME=redis
-REDIS_PORT=6379
 ```
 
-**_SERVER_PORT_** - порт web сервера, который сконфигурирован в фреймворке
-**_SERVER_HOSTNAME_** - имя web сервера
-**_DB_HOSTNAME_** - адрес базы данных
-**_DB_PORT_** - порт базы данных
-**_DB_USERNAME_** - пользователь базы данных для подключения
-**_DB_PASSWORD_** - пароль пользователя для подключения
-**_DB_DATABASE_NAME_** - имя базы
-**_MODE_** - режим запуска nodejs
-dev - режим разработки
-prod - режим рабочей версии
-debug - режим отладки
-**_TYPEORM_SYNC_** - синхронизация typeOrm необходима при создании новой базы
-**_REDIS_HOSTNAME_** - адрес сервиса кешиования
-**_REDIS_PORT_** - порт сервиса кеширования
+- **_SERVER_HOST_** - адрес web-сервера
+- **_SERVER_PORT_** - порт web-сервера
+- **_NODE_ENV_** - режим запуска node.js
+  > dev/prod
+- **_DB_HOST_** - адрес базы данных
+- **_DB_PORT_** - порт базы данных
+- **_DB_USERNAME_** - пользователь базы данных для подключения
+- **_DB_PASSWORD_** - пароль пользователя для подключения
+- **_DB_DATABASE_** - имя базы
+- **_TYPEORM_SYNC_** - синхронизация typeOrm (необходима при создании новой базы)
 
-##№ Запуск и сборка контейнера докер
+#### Запуск и пересборка докер контейнера
 
 ```
-docker-compose up
+docker-compose up --build
 ```
+> используй флаг `-V`, если нужно очистить volumes при запуске
 
-##№ Пересборка контейнера докер
-
-Просто пересборка проекта
-
+Остановка проекта:
 ```
-docker-compose up
+docker-compose down
 ```
+> используй флаг `-v` если нужно очистить volumes при остановке
 
-С очисткой всех хранилищ
+Сервис доступен по адресу: <http://localhost:SERVER_PORT>
+> SERVER_PORT - порт, который указали в файле .env
 
-```
-docker-compose up --build -V
-```
+## Запуск тестов
 
-Сервер доступен по адресу: <http://localhost:SERVER_PORT>
-SERVER_PORT - порт, который указали в файле .env
+Unit-тесты написаны на Jest.
 
-##№ Запуск тестов
-Описание запуска тестов
+Запуск:
+```npm run test```
+
+В режиме разработки:
+```npm run test:watch```
+
+С выводом покрытия тестами:
+```npm run test:cov```
