@@ -21,6 +21,10 @@ describe('PollsController', () => {
   const mockPoll = new Poll();
   mockPoll.id = 1;
 
+  const mockUser = new UserDto();
+  mockUser.userCookie = 'some string';
+  mockUser.userId = 123;
+
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [PollsController],
@@ -32,14 +36,19 @@ describe('PollsController', () => {
   });
 
   describe('getPollById', () => {
-    const mockUser = new UserDto();
-    mockUser.userCookie = 'some string';
-    mockUser.userId = 123;
-
     it('Should call pollService.getPollById and returns a Poll', async () => {
       pollsService.getPollById.mockResolvedValue(mockPoll);
       const result = await pollsController.getPollById(10, mockUser);
-      expect(pollsService.getPollById).toHaveBeenLastCalledWith(10, mockUser);
+      expect(pollsService.getPollById).toHaveBeenLastCalledWith(10, mockUser, false);
+      expect(result).toEqual(mockPoll);
+    });
+  });
+
+  describe('getPollResultById', () => {
+    it('Should call pollService.getPollById and returns a Poll in status result', async () => {
+      pollsService.getPollById.mockResolvedValue(mockPoll);
+      const result = await pollsController.getPollResultById(10, mockUser);
+      expect(pollsService.getPollById).toHaveBeenLastCalledWith(10, mockUser, true);
       expect(result).toEqual(mockPoll);
     });
   });
@@ -59,8 +68,8 @@ describe('PollsController', () => {
 
   describe('deactivatePoll', () => {
     it('Should deactivate a Poll', async () => {
-      const result = await pollsController.deactivatePoll(10);
-      expect(pollsService.deactivatePoll).toHaveBeenCalledWith(10);
+      const result = await pollsController.deactivatePoll(10, mockUser);
+      expect(pollsService.deactivatePoll).toHaveBeenCalledWith(10, mockUser);
     });
   });
 

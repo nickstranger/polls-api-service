@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { PollsService } from './polls.service';
 import { Poll } from './poll.entity';
@@ -19,7 +19,7 @@ describe('PollsService', () => {
   const mockPollRepository = () => ({
     findOne: jest.fn(),
     createPoll: jest.fn(),
-    update: jest.fn(),
+    save: jest.fn(),
     delete: jest.fn()
   });
 
@@ -28,15 +28,7 @@ describe('PollsService', () => {
     createQuestions: jest.fn()
   });
 
-  const mockPoll = new Poll();
-  mockPoll.id = 10;
-
-  const mockQuestion = new Question();
-  mockQuestion.id = 34;
-
-  const mockUser = new UserDto();
-  mockUser.userCookie = 'some string';
-  mockUser.userId = 123;
+  let mockPoll, mockQuestion, mockUser;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -50,6 +42,16 @@ describe('PollsService', () => {
     pollsService = await module.get<PollsService>(PollsService);
     pollRepository = await module.get<PollRepository>(PollRepository);
     questionsService = await module.get<QuestionsService>(QuestionsService);
+
+    mockPoll = new Poll();
+    mockPoll.id = 10;
+
+    mockQuestion = new Question();
+    mockQuestion.id = 34;
+
+    mockUser = new UserDto();
+    mockUser.userCookie = 'some string';
+    mockUser.userId = 123;
   });
 
   describe('getPollById', () => {
@@ -58,16 +60,20 @@ describe('PollsService', () => {
 
       spyOn(questionsService, 'getQuestionsByPoll').and.returnValue([mockQuestion, mockQuestion]);
 
-      const result = await pollsService.getPollById(10, mockUser);
+      const result = await pollsService.getPollById(10, mockUser, false);
       expect(pollRepository.findOne).toHaveBeenCalledWith({ where: { id: 10 } });
-      expect(questionsService.getQuestionsByPoll).toHaveBeenCalledWith(result, mockUser);
+      expect(questionsService.getQuestionsByPoll).toHaveBeenCalledWith(
+        result,
+        mockUser,
+        false
+      );
       expect(result).toEqual(mockPoll);
       expect(result.questionsCount).toEqual(2);
     });
 
     it("Should throw NotFoundException in Poll isn't exists", () => {
       pollRepository.findOne.mockResolvedValue(null);
-      const result = pollsService.getPollById(10, mockUser);
+      const result = pollsService.getPollById(10, mockUser, false);
       expect(pollRepository.findOne).toHaveBeenCalledWith({ where: { id: 10 } });
       expect(result).rejects.toThrow(NotFoundException);
       expect(questionsService.getQuestionsByPoll).not.toHaveBeenCalled();
@@ -111,16 +117,36 @@ describe('PollsService', () => {
   });
 
   describe('deactivatePoll', () => {
-    it('Should deactivate a Poll', async () => {
-      const result = await pollsService.deactivatePoll(10);
-      expect(pollRepository.update).toHaveBeenCalledWith(10, { status: PollStatus.INACTIVE });
+    it('Should deactivate a Poll success with PollStatus.INACTIVE', async () => {
+      const mockInactivePoll = {
+        ...mockPoll,
+        status: PollStatus.INACTIVE
+      };
+      spyOn(pollsService, 'getShallowPollById').and.returnValue({
+        ...mockPoll,
+        status: PollStatus.ACTIVE
+      });
+      spyOn(pollsService, 'completePollToFull').and.returnValue(mockInactivePoll);
+
+      const result = await pollsService.deactivatePoll(10, mockUser);
+      expect(pollsService.getShallowPollById).toHaveBeenCalledWith(10);
+      expect(pollRepository.save).toHaveBeenCalledWith(mockInactivePoll);
+      expect(pollsService.completePollToFull).toHaveBeenCalledWith(
+        mockInactivePoll,
+        mockUser,
+        false
+      );
     });
 
-    it("Shouldn't find a Poll to deactivate", () => {
-      spyOn(pollRepository, 'update').and.returnValue({ affected: 0 });
-      const result = pollsService.deactivatePoll(10);
-      expect(pollRepository.update).toHaveBeenCalledWith(10, { status: PollStatus.INACTIVE });
-      expect(result).rejects.toThrow(NotFoundException);
+    it('Should deactivate a Poll failed with PollStatus.ACTIVE', () => {
+      spyOn(pollsService, 'getShallowPollById').and.returnValue({
+        ...mockPoll,
+        status: PollStatus.INACTIVE
+      });
+
+      const result = pollsService.deactivatePoll(10, mockUser);
+      expect(pollsService.getShallowPollById).toHaveBeenCalledWith(10);
+      expect(result).rejects.toThrow(BadRequestException);
     });
   });
 });

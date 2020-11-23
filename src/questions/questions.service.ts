@@ -25,7 +25,7 @@ export class QuestionsService {
   // дополняет неполную сущность Question, которая берется из БД, до полной сущности со всеми остальными полями
   async completeQuestionToFull(
     question: Question,
-    optionsWithResults: boolean = false,
+    optionsWithResults = false,
     questionState: QuestionState,
     user?: UserDto
   ): Promise<Question> {
@@ -64,7 +64,11 @@ export class QuestionsService {
     return found;
   }
 
-  async getQuestionsByPoll(poll: Poll, user: UserDto): Promise<Question[]> {
+  async getQuestionsByPoll(
+    poll: Poll,
+    user: UserDto,
+    showResult: boolean
+  ): Promise<Question[]> {
     const questions: Question[] = await this.questionRepository.find({
       where: { pollId: poll.id },
       order: { orderInPoll: 'ASC' }
@@ -82,7 +86,7 @@ export class QuestionsService {
         user
       );
       const questionState =
-        poll.status === PollStatus.INACTIVE || hasUserVotedAlready
+        poll.status === PollStatus.INACTIVE || hasUserVotedAlready || showResult
           ? QuestionState.RESULT
           : QuestionState.VOTING;
       const optionsWithResults = questionState === QuestionState.RESULT;

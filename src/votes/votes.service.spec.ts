@@ -18,18 +18,7 @@ describe('VotesService', () => {
   let questionsService;
   let optionsService;
 
-  const mockUser = new UserDto();
-  mockUser.userCookie = 'some string';
-
-  const mockVote = new Vote();
-  mockVote.id = 10;
-  mockVote.questionId = 5;
-  // mockVote.user = mockUser;
-
-  const mockQuestion = new Question();
-
-  const mockOption = new Option();
-  mockOption.questionId = 5;
+  let mockUser, mockVote, mockQuestion, mockOption;
 
   const mockVoteRepository = () => ({
     findOne: jest.fn(),
@@ -62,6 +51,19 @@ describe('VotesService', () => {
     voteRepository = await module.get<VoteRepository>(VoteRepository);
     questionsService = await module.get<QuestionsService>(QuestionsService);
     optionsService = await module.get<OptionsService>(OptionsService);
+
+    mockUser = new UserDto();
+    mockUser.userCookie = 'some string';
+
+    mockVote = new Vote();
+    mockVote.id = 10;
+    mockVote.questionId = 5;
+    // mockVote.user = mockUser;
+
+    mockQuestion = new Question();
+
+    mockOption = new Option();
+    mockOption.questionId = 5;
   });
 
   describe('getVoteById', () => {
@@ -191,7 +193,7 @@ describe('VotesService', () => {
       votesService.hasUserVotedAlready = jest.fn().mockResolvedValue(false);
       voteRepository.createVote.mockResolvedValue(mockVote);
       questionsService.getQuestionById.mockResolvedValue(mockQuestion);
-      questionsService.completeQuestionToFull.mockResolvedValue({ mockQuestion });
+      questionsService.completeQuestionToFull.mockResolvedValue(mockQuestion);
       const result = await votesService.createVote(createVoteDto);
 
       expect(optionsService.getOptionById).toHaveBeenCalledWith(createVoteDto.optionId);
@@ -206,7 +208,7 @@ describe('VotesService', () => {
         true,
         QuestionState.RESULT
       );
-      expect(result).toEqual({ mockQuestion });
+      expect(result).toEqual({ ...mockQuestion, userVote: mockVote });
     });
 
     it('Can not create new Vote, because user has already voted', async () => {

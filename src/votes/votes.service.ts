@@ -82,7 +82,9 @@ export class VotesService {
     const vote = await this.voteRepository.createVote(createVoteDto, option);
 
     const question = await this.questionsService.getQuestionById(vote.questionId);
-    return await this.questionsService.completeQuestionToFull(question, true, QuestionState.RESULT);
+    const fullQuestion = await this.questionsService.completeQuestionToFull(question, true, QuestionState.RESULT);
+    fullQuestion.userVote = vote;
+    return fullQuestion;
   }
 
   async deleteVote(id: number): Promise<Question> {

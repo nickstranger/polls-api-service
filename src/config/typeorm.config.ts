@@ -11,7 +11,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   entities: [__dirname + '/../**/*.entity.{ts,js}'],
   migrations: [__dirname + '/../migrations/*.migration.{js,ts}'],
   synchronize: process.env.TYPEORM_SYNC === 'true',
-  logging: ['error', 'schema', 'info', 'log'],
+  logging: ['error', 'warn'],
   retryAttempts: 5,
   maxQueryExecutionTime: 2000,
   cache: true,

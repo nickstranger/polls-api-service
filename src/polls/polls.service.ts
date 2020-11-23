@@ -1,6 +1,12 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, UpdateResult } from 'typeorm';
+import { DeleteResult } from 'typeorm';
 
 import { CreatePollDto } from './dto/create-poll.dto';
 import { PollRepository } from './poll.repository';
@@ -19,7 +25,7 @@ export class PollsService {
     private questionsService: QuestionsService
   ) {}
 
-  async getPollById(id: number, user: UserDto): Promise<Poll> {
+  async getShallowPollById(id: number): Promise<Poll> {
     const poll: Poll = await this.pollRepository.findOne({
       where: { id }
     });
@@ -29,7 +35,21 @@ export class PollsService {
     }
     this.logger.verbose(`Poll with id ${id} successfully found`);
 
-    poll.questions = await this.questionsService.getQuestionsByPoll(poll, user);
+    return poll;
+  }
+
+  async getPollById(id: number, user: UserDto, showResult: boolean): Promise<Poll> {
+    const poll = await this.getShallowPollById(id);
+
+    return await this.completePollToFull(poll, user, showResult);
+  }
+
+  async completePollToFull(
+    poll: Poll,
+    user: UserDto,
+    showResult: boolean
+  ): Promise<Poll> {
+    poll.questions = await this.questionsService.getQuestionsByPoll(poll, user, showResult);
     poll.questionsCount = poll.questions.length;
 
     return poll;
@@ -44,16 +64,25 @@ export class PollsService {
     return createdPoll;
   }
 
-  async deactivatePoll(id: number): Promise<void> {
-    const updated: UpdateResult = await this.pollRepository.update(id, {
-      status: PollStatus.INACTIVE
-    });
-    if (updated && updated.affected === 0) {
-      this.logger.warn(`Poll with id ${id} doesn't exist`);
-      throw new NotFoundException(`Poll with id ${id} is not exists`);
-    } else {
-      this.logger.verbose(`Poll with id ${id} successfully deactivated`);
+  async deactivatePoll(id: number, user: UserDto): Promise<Poll> {
+    const poll = await this.getShallowPollById(id);
+
+    if (poll.status === PollStatus.INACTIVE) {
+      this.logger.error(`Poll with id ${id} was deactivated already`);
+      throw new BadRequestException(`Poll with id ${id} was deactivated already`);
     }
+
+    poll.status = PollStatus.INACTIVE;
+
+    try {
+      await this.pollRepository.save(poll);
+      this.logger.verbose(`Poll with id ${id} successfully deactivated`);
+    } catch (error) {
+      this.logger.error(`Failed on deactivate Poll with id ${id}`);
+      throw new InternalServerErrorException();
+    }
+
+    return await this.completePollToFull(poll, user, false);
   }
 
   async deletePoll(id: number): Promise<void> {

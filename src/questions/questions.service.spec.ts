@@ -152,15 +152,24 @@ describe('QuestionsService', () => {
 
   describe('getQuestionsByPoll', () => {
     const testData = [
-      [PollStatus.ACTIVE, true, [{ id: 10, state: QuestionState.RESULT }]],
-      [PollStatus.ACTIVE, false, [{ id: 10, state: QuestionState.VOTING }]],
-      [PollStatus.INACTIVE, true, [{ id: 10, state: QuestionState.RESULT }]],
-      [PollStatus.INACTIVE, false, [{ id: 10, state: QuestionState.RESULT }]]
+      [PollStatus.ACTIVE, true, false, [{ id: 10, state: QuestionState.RESULT }]],
+      [PollStatus.ACTIVE, false, false, [{ id: 10, state: QuestionState.VOTING }]],
+      [PollStatus.INACTIVE, true, false, [{ id: 10, state: QuestionState.RESULT }]],
+      [PollStatus.INACTIVE, false, false, [{ id: 10, state: QuestionState.RESULT }]],
+      [PollStatus.ACTIVE, true, true, [{ id: 10, state: QuestionState.RESULT }]],
+      [PollStatus.ACTIVE, false, true, [{ id: 10, state: QuestionState.RESULT }]],
+      [PollStatus.INACTIVE, true, true, [{ id: 10, state: QuestionState.RESULT }]],
+      [PollStatus.INACTIVE, false, true, [{ id: 10, state: QuestionState.RESULT }]]
     ];
 
     test.each(testData)(
       'Should return Questions by Poll',
-      async (status: PollStatus, hasUserVotedAlready: boolean, expected: Question[]) => {
+      async (
+        status: PollStatus,
+        hasUserVotedAlready: boolean,
+        showResult: boolean,
+        expected: Question[]
+      ) => {
         spyOn(questionRepository, 'find').and.returnValue([mockQuestion]);
         spyOn(votesService, 'hasUserVotedAlready').and.returnValue(hasUserVotedAlready);
         spyOn(questionsService, 'completeQuestionToFull').and.returnValue({
@@ -170,7 +179,8 @@ describe('QuestionsService', () => {
 
         const result = await questionsService.getQuestionsByPoll(
           { ...mockPoll, status: status },
-          mockUser
+          mockUser,
+          showResult
         );
 
         expect(questionRepository.find).toHaveBeenCalledWith({
@@ -194,7 +204,7 @@ describe('QuestionsService', () => {
     test("Should throw NotFoundException in Questions aren't exists", () => {
       spyOn(questionRepository, 'find').and.returnValue([]);
 
-      const result = questionsService.getQuestionsByPoll(mockPoll, mockUser);
+      const result = questionsService.getQuestionsByPoll(mockPoll, mockUser, false);
 
       expect(questionRepository.find).toHaveBeenCalledWith({
         where: { pollId: mockPoll.id },
