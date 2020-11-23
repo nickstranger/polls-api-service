@@ -1,4 +1,4 @@
-FROM node:14.5.0-alpine3.12 As builder
+FROM node:14.15.1-alpine3.12
 
 WORKDIR /usr/src/app
 
@@ -8,18 +8,6 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+EXPOSE 4000
 
-FROM node:14.5.0-alpine3.12 as production
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-
-RUN npm ci --only=production
-
-COPY --from=builder /usr/src/app/dist ./dist
-
-EXPOSE 3000
-
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:dev"]

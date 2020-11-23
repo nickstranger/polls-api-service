@@ -3,11 +3,11 @@ import { NamingStrategy } from './typeormNamingStrategy.config';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
-  host: process.env.DB_HOSTNAME,
+  host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT),
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE_NAME,
+  database: process.env.DB_DATABASE,
   entities: [__dirname + '/../**/*.entity.{ts,js}'],
   migrations: [__dirname + '/../migrations/*.migration.{js,ts}'],
   synchronize: process.env.TYPEORM_SYNC === 'true',

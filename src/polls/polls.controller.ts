@@ -24,10 +24,7 @@ export class PollsController {
   private readonly logger = new Logger('PollsController');
 
   @Get('/:id')
-  async getPollById(
-    @Param('id', ParseIntPipe) id: number,
-    @Query() user: UserDto
-  ): Promise<Poll> {
+  async getPollById(@Param('id', ParseIntPipe) id: number, @Query() user: UserDto): Promise<Poll> {
     this.logger.verbose(`Trying to fetch Poll with id: ${id}`);
     return this.pollsService.getPollById(id, user, false);
   }

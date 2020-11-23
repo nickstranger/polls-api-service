@@ -4,36 +4,29 @@ services:
   main:
     container_name: polls-main
     image: polls-main:latest
-    build:
-      context: .
     ports:
-      - ${SERVER_PORT}:3000
-    environment:
-        NODE_ENV: production 
+      - ${SERVER_PORT}:${SERVER_PORT}
     env_file:
       - .env
     networks:
       - webnet
     depends_on:
-      # - redis
       - postgres
-  # redis:
-  #   container_name: redis
-  #   image: redis:6
-  #   networks:
-  #     - webnet
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
   postgres:
     container_name: postgres
-    image: postgres:12
+    image: postgres:13.1
     networks:
       - webnet
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_DB: ${DB_DATABASE}
       PG_DATA: /var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - ${DB_PORT}:${DB_PORT}
     volumes:
       - pgdata:/var/lib/postgresql/data
 networks:
